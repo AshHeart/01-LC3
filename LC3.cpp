@@ -10,6 +10,8 @@
 #include <sys/termios.h>
 #include <sys/mman.h>
 
+#include "AS/BitUtils.h"
+
 #define MEMORY_MAX (1 << 16) // 65,536
 
 #define BYTE_TO_BINARY_PATTERN "%c%c%c%c%c%c%c%c"
@@ -103,10 +105,9 @@ void handle_interrupt(int signal)
     exit(-2);
 }
 
-uint16_t sign_extend(uint16_t, int);
 void execute_add(uint16_t);
 void update_flags(uint16_t);
-void __print_decimal(char *);
+void __print_decimal(const char *);
 void __print_16bits(uint16_t);
 
 int main(int argc, char **argv) {
@@ -125,7 +126,12 @@ int main(int argc, char **argv) {
     //     }
     // }
 
-    __print_decimal("0x1f");
+       // A workaround to the cannot convert string literal to char* warning by clang
+      // FIXME: There should be a better approach, see why std::string is not found
+     //          void foo (std::string theParam) { std::cout << theParam; }
+    //           foo("bar");
+    const char* param = "0x1f";
+    __print_decimal(param);
 
     signal(SIGINT, handle_interrupt);
     disable_input_buffering();
@@ -162,7 +168,7 @@ void execute_add(uint16_t instr)
 
     if (imm_flag)
     {
-        uint16_t imm5 = sign_extend(instr & 0x1F, 5);
+        uint16_t imm5 = AS::sign_extend(instr & 0x1F, 5);
         reg[r0] = reg[r1] + imm5;
     }
     else
@@ -172,15 +178,6 @@ void execute_add(uint16_t instr)
     }
 
     update_flags(r0);
-}
-
-uint16_t sign_extend(short unsigned int x, int bit_count)
-{
-    if ((x >> (bit_count - 1)) & 1) {
-        x |= (0XFFF << bit_count);
-    }
-
-    return x;
 }
 
 void update_flags(uint16_t r)
@@ -199,9 +196,9 @@ void update_flags(uint16_t r)
     }
 }
 
-void __print_decimal(char *hexstr)
+void __print_decimal(const char *hexstr)
 {
-    printf("%d", (int)strtol(hexstr, NULL, 0));
+    printf("%d\n", (int)strtol(hexstr, NULL, 0));
 }
 
 void __print_16bits(uint16_t byte)

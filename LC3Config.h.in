@@ -1,0 +1,7 @@
+/**
+ * Copyright (c) 2022, the AshHeart/01-LC3 developers.
+ */
+
+#define LC3_VERSION_MAJOR @LC3_VERSION_MAJOR@
+#define LC3_VERSION_MINOR @LC3_VERSION_MINOR@
+#define LC3_VERSION_PATCH @LC3_VERSION_PATCH@
