@@ -203,6 +203,6 @@ void __print_decimal(const char *hexstr)
 
 void __print_16bits(uint16_t byte)
 {
-    printf("byte: "BYTE_TO_BINARY_PATTERN" "BYTE_TO_BINARY_PATTERN"\n",
+    printf("byte: " BYTE_TO_BINARY_PATTERN" " BYTE_TO_BINARY_PATTERN"\n",
     BYTE_TO_BINARY(byte >> 8), BYTE_TO_BINARY(byte));
 }
