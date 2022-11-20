@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <stdio.h>
 #include <stdint.h>
 #include <signal.h>
@@ -43,6 +44,12 @@ enum
 };
 
 uint16_t reg[R_COUNT];
+
+enum
+{
+    MR_KBSR = 0xFE00,
+    MR_KBDR = 0xFE02
+};
 
 enum
 {
@@ -106,9 +113,12 @@ void handle_interrupt(int signal)
 }
 
 void execute_add(uint16_t);
+void execute_loadi(uint16_t);
 void update_flags(uint16_t);
 void __print_decimal(const char *);
 void __print_16bits(uint16_t);
+
+uint16_t mem_read(uint16_t addr);
 
 int main(int argc, char **argv) {
 
@@ -154,6 +164,9 @@ int main(int argc, char **argv) {
             case OP_ADD:
                 execute_add(instr);
                 break;
+            case OP_LD:
+                execute_loadi(instr);
+                break;
         }
     }
 
@@ -180,6 +193,17 @@ void execute_add(uint16_t instr)
     update_flags(r0);
 }
 
+void execute_loadi(uint16_t instr)
+{
+    uint16_t r0 = (instr >> 9) & 0x7;
+
+    uint16_t pc_offset = AS::sign_extend(instr & 0x1FF, 9);
+
+    reg[r0] = mem_read(mem_read(reg[R_PC] + pc_offset));
+
+    update_flags(r0);
+}
+
 void update_flags(uint16_t r)
 {
     if (reg[r] == 0)
@@ -194,6 +218,23 @@ void update_flags(uint16_t r)
     {
         reg[R_COND] = FL_POS;
     }
+}
+
+uint16_t mem_read(uint16_t address)
+{
+    if (address == MR_KBSR)
+    {
+        if (check_key()) {
+            memory[MR_KBSR] = (1 << 15);
+            memory[MR_KBDR] = getchar();
+        }
+        else
+        {
+            memory[MR_KBSR] = 0;
+        }
+    }
+
+    return memory[address];
 }
 
 void __print_decimal(const char *hexstr)
